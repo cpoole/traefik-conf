@@ -1,0 +1,34 @@
+traefik:
+  ports:
+    - 8000:8000/tcp
+    - 80:80/tcp
+    - 443:443/tcp
+  log_driver: ''
+  labels:
+    io.rancher.scheduler.global: 'true'
+    io.rancher.scheduler.affinity:host_label: traefik_lb=true
+    io.rancher.scheduler.affinity:container_label_ne: io.rancher.stack_service.name=traefik/traefik
+    io.rancher.sidekicks: traefik-conf
+    io.rancher.container.hostname_override: container_name
+  log_opt: {}
+  image: traefik:v1.0.0
+  volumes_from:
+    - traefik-conf
+traefik-conf:
+  log_driver: ''
+  labels:
+    io.rancher.scheduler.global: 'true'
+    io.rancher.scheduler.affinity:host_label: traefik_lb=true
+    io.rancher.scheduler.affinity:container_label_ne: io.rancher.stack_service.name=traefik/traefik-conf
+    io.rancher.container.start_once: 'true'
+    io.rancher.container.pull_image: 'always'
+  environment:
+    - CONFD_INTERVAL=15
+    - CONFD_PREFIX=2015-12-19
+    - TRAEFIK_HTTP_PORT=80
+    - TRAEFIK_HTTPS_PORT=443
+    - TRAEFIK_ADMIN_PORT=8000
+    - TRAEFIK_LOG_LEVEL=debug
+  log_opt: {}
+  image: connorpoole/traefik-conf:0.12.2
+

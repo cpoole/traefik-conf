@@ -1,0 +1,24 @@
+# traefik.toml
+logLevel = "{{TRAEFIK_LOG_LEVEL}}"
+traefikLogsFile = "/dev/stdout"
+accessLogsFile = "/dev/stdout"
+defaultEntryPoints = ["http","https"]
+[entryPoints]
+  [entryPoints.http]
+  address = ":{{TRAEFIK_HTTP_PORT}}"
+    [entryPoints.http.redirect]
+      entryPoint = "https"
+
+  [entryPoints.https]
+  address = ":{{TRAEFIK_HTTPS_PORT}}"
+    [entryPoints.https.tls]
+      [[entryPoints.https.tls.certificates]]
+      certFile = "/etc/traefik/certs/traefik.crt"
+      keyFile = "/etc/traefik/certs/traefik.key"
+
+[web]
+address = ":{{TRAEFIK_ADMIN_PORT}}"
+
+[file]
+filename = "/etc/traefik/rules.toml"
+watch = true

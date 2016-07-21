@@ -1,0 +1,41 @@
+#!/bin/bash
+
+TRAEFIK_TOML='/etc/traefik/traefik.toml'
+
+#traefik log level
+: ${TRAEFIK_LOG_LEVEL:-debug} && \
+sed -i -e "s@{{TRAEFIK_LOG_LEVEL}}@${TRAEFIK_LOG_LEVEL}@g" ${TRAEFIK_TOML}
+
+#traefik http port
+: ${TRAEFIK_HTTP_PORT:-80} && \
+sed -i -e "s@{{TRAEFIK_HTTP_PORT}}@${TRAEFIK_HTTP_PORT}@g" ${TRAEFIK_TOML}
+
+#traefik https port
+: ${TRAEFIK_HTTPS_PORT:-443} && \
+sed -i -e "s@{{TRAEFIK_HTTPS_PORT}}@${TRAEFIK_HTTPS_PORT}@g" ${TRAEFIK_TOML}
+
+#traefik admin port
+: ${TRAEFIK_ADMIN_PORT:-8000} && \
+sed -i -e "s@{{TRAEFIK_ADMIN_PORT}}@${TRAEFIK_ADMIN_PORT}@g" ${TRAEFIK_TOML}
+
+function checkNetwork {
+    echo "[ Checking container ip... ]"
+    a="$(ip a s dev eth0 &> /dev/null; echo $?)"
+    while  [ $a -eq 1 ];
+    do
+        a="$(ip a s dev eth0 &> /dev/null; echo $?)" 
+        sleep 1
+    done
+
+    echo "[ Checking container connectivity... ]"
+    b="$(fping -c 1 rancher-metadata.rancher.internal &> /dev/null; echo $?)"
+    while [ $b -eq 1 ];
+    do
+        b="$(fping -c 1 rancher-metadata.rancher.internal &> /dev/null; echo $?)"
+        sleep 1
+    done
+}
+
+checkNetwork
+
+exec /opt/tools/confd/bin/confd -interval ${CONFD_INTERVAL} -confdir /opt/tools/confd/etc -backend rancher -prefix ${CONFD_PREFIX}
